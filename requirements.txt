@@ -1,0 +1,6 @@
+ctranformers == 0.2.5
+
+sentence-transformer == 2.2.2
+pinecone-client ==
+longchain==0.0.225
+flask
