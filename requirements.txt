@@ -4,3 +4,4 @@ pinecone-client
 longchain
 flask
 pypdf
+-e .
