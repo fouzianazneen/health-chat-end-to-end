@@ -4,4 +4,5 @@ pinecone-client
 longchain
 flask
 pypdf
+python.dotenv
 -e .
