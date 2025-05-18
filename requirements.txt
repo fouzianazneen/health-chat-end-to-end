@@ -3,7 +3,7 @@ langchain-community
 langchain-huggingface
 ctransformers
 sentence-transformers
-pinecone-client
+pinecone
 flask
 pypdf
 python-dotenv
