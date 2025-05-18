@@ -44,9 +44,13 @@
 
 
 
+
+
+
+
 from src.helper import load_pdf, text_split, download_hugging_face_embeddings
 from langchain_community.vectorstores import Pinecone as LangchainPinecone
-from pinecone import Pinecone as PineconeClient, ServerlessSpec
+from pinecone import Pinecone, ServerlessSpec
 from dotenv import load_dotenv
 import os
 
@@ -62,7 +66,7 @@ text_chunks = text_split(extracted_data)
 embeddings = download_hugging_face_embeddings()
 
 # Step 2: Initialize Pinecone client
-pc = PineconeClient(api_key=PINECONE_API_KEY)
+pc = Pinecone(api_key=PINECONE_API_KEY)
 
 # Step 3: Create index if it doesn't exist
 index_name = "chatbot"
