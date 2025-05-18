@@ -106,7 +106,7 @@
 from flask import Flask, render_template, jsonify, request
 from src.helper import download_hugging_face_embeddings
 from langchain_community.vectorstores import Pinecone as LangchainPinecone
-from pinecone import Pinecone as PineconeClient
+from pinecone import Pinecone
 from langchain.prompts import PromptTemplate
 from langchain_community.llms import CTransformers
 from langchain.chains import RetrievalQA
@@ -129,7 +129,7 @@ CLOUD, REGION = PINECONE_API_ENV.split('-')[0], '-'.join(PINECONE_API_ENV.split(
 embeddings = download_hugging_face_embeddings()
 
 # Initialize Pinecone client
-pc = PineconeClient(api_key=PINECONE_API_KEY)
+pc = Pinecone(api_key=PINECONE_API_KEY)
 index_name = "chatbot"
 
 docsearch = LangchainPinecone.from_existing_index(
@@ -146,14 +146,31 @@ PROMPT = PromptTemplate(
 chain_type_kwargs = {"prompt": PROMPT}
 
 # LLM configuration
-llm = CTransformers(
-    model="model/llama-2-7b-chat.ggmlv3.q4_0.bin",
-    model_type="llama",
-    config={
-        'max_new_tokens': 512,
-        'temperature': 0.8
-    }
-)
+try:
+    import os.path
+    model_path = "model/llama-2-7b-chat.ggmlv3.q4_0.bin"
+    
+    if os.path.isfile(model_path):
+        llm = CTransformers(
+            model=model_path,
+            model_type="llama",
+            config={
+                'max_new_tokens': 512,
+                'temperature': 0.8
+            }
+        )
+    else:
+        from langchain_community.llms import HuggingFaceHub
+        print(f"Warning: Model file {model_path} not found. Falling back to HuggingFaceHub.")
+        os.environ["HUGGINGFACEHUB_API_TOKEN"] = os.environ.get("HUGGINGFACE_API_KEY", "")
+        llm = HuggingFaceHub(
+            repo_id="meta-llama/Llama-2-7b-chat-hf",
+            model_kwargs={"temperature": 0.8, "max_new_tokens": 512}
+        )
+except Exception as e:
+    from langchain.llms import OpenAI
+    print(f"Warning: Failed to load LLM: {str(e)}. Falling back to OpenAI.")
+    llm = OpenAI(temperature=0.8)
 
 # QA Chain
 qa = RetrievalQA.from_chain_type(
