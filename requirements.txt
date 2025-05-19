@@ -1,29 +1,31 @@
+# Core web framework
+Flask==3.1.1
+Jinja2==3.1.6
+python-dotenv==1.1.0
+requests==2.32.3
 
+# LLM & LangChain ecosystem
+langchain==0.3.25
+langchain-core==0.3.60
+langchain-community==0.3.24
+langchain-pinecone==0.2.6
 
+# Vector database (Pinecone)
+pinecone-client==2.2.4
 
+# Embeddings & local models
+ctransformers==0.2.27
+sentence-transformers==4.1.0
+torch==2.7.0
+huggingface-hub==0.31.2
 
+# Document handling (in case of PDF/document parsing)
+pypdf==5.5.0
 
+# Deployment
+gunicorn==23.0.0
 
-# Core dependencies
-flask
-python-dotenv
-gunicorn
-
-# LangChain ecosystem
-langchain
-langchain-community
-langchain-core>=0.1.8,<0.2.0
-langchain-pinecone
-
-# Machine learning and embeddings
-sentence-transformers
-ctransformers
-
-# Vector database
-pinecone-client==2.2.1
-
-# Document processing
-pypdf
-
-# Current project
--e .
+# Scientific computing (if used in embeddings or pre-processing)
+scikit-learn==1.6.1
+numpy==2.2.5
+scipy==1.15.3
