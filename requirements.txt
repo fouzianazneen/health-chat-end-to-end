@@ -1,23 +1,29 @@
+
+
+
+
+
+
 # Core dependencies
-flask==2.0.1
-python-dotenv==1.0.0
-gunicorn==20.1.0
+flask
+python-dotenv
+gunicorn
 
 # LangChain ecosystem
-langchain==0.0.267
-langchain-core==0.1.0
-langchain-community==0.0.10
-langchain-pinecone==0.1.0
+langchain
+langchain-community
+langchain-core>=0.1.8,<0.2.0
+langchain-pinecone
 
 # Machine learning and embeddings
-sentence-transformers==2.2.2
-ctransformers==0.2.27
+sentence-transformers
+ctransformers
 
 # Vector database
 pinecone-client==2.2.1
 
 # Document processing
-pypdf==3.15.1
+pypdf
 
 # Current project
 -e .
