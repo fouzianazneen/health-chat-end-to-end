@@ -1,15 +1,24 @@
 
 # from flask import Flask, render_template, jsonify, request
 # from src.helper import download_hugging_face_embeddings
+<<<<<<< HEAD
+=======
+# from langchain_community.vectorstores import Pinecone as LangchainPinecone
+# from pinecone import Pinecone as PineconeClient
+>>>>>>> 41c3c380f9fbe7c2a97004fa79baf3eccb4afe49
 # from langchain_core.prompts import PromptTemplate
 # from langchain_community.llms import CTransformers
 # from langchain.chains import RetrievalQA
 # from dotenv import load_dotenv
+<<<<<<< HEAD
 # from src.prompt import prompt_template
 # from pinecone import Pinecone
 # # Install the new package if needed: pip install langchain-pinecone
 # from langchain_pinecone import PineconeVectorStore
 
+=======
+# from src.prompt import *
+>>>>>>> 41c3c380f9fbe7c2a97004fa79baf3eccb4afe49
 # import os
 
 # # Load environment variables
@@ -17,6 +26,7 @@
 
 # app = Flask(__name__)
 
+<<<<<<< HEAD
 # # Pinecone setup
 # PINECONE_API_KEY = os.environ.get('PINECONE_API_KEY')
 # PINECONE_API_ENV = os.environ.get('PINECONE_API_ENV')
@@ -40,12 +50,42 @@
 # )
 
 # # Setup prompt
+=======
+# PINECONE_API_KEY = os.environ.get('PINECONE_API_KEY')
+# PINECONE_API_ENV = os.environ.get('PINECONE_API_ENV')  # e.g., aws-us-west-2
+
+# # Split the env into cloud and region
+# CLOUD, REGION = PINECONE_API_ENV.split('-')[0], '-'.join(PINECONE_API_ENV.split('-')[1:])
+
+# # Initialize embedding model
+# embeddings = download_hugging_face_embeddings()
+
+# # Initialize Pinecone client
+# pc = PineconeClient(api_key=PINECONE_API_KEY)
+# index_name = "chatbot"
+
+# docsearch = LangchainPinecone.from_existing_index(
+#     index_name=index_name,
+#     embedding=embeddings,
+#     namespace="default"  # optional, use only if you are using namespaces
+# )
+ 
+
+
+# # Prompt setup
+>>>>>>> 41c3c380f9fbe7c2a97004fa79baf3eccb4afe49
 # PROMPT = PromptTemplate(
 #     template=prompt_template,
 #     input_variables=["context", "question"]
 # )
+<<<<<<< HEAD
 
 # # LLM config using CTransformers
+=======
+# chain_type_kwargs = {"prompt": PROMPT}
+
+# # LLM configuration
+>>>>>>> 41c3c380f9fbe7c2a97004fa79baf3eccb4afe49
 # llm = CTransformers(
 #     model="model/llama-2-7b-chat.ggmlv3.q4_0.bin",
 #     model_type="llama",
@@ -61,10 +101,21 @@
 #     chain_type="stuff",
 #     retriever=docsearch.as_retriever(search_kwargs={'k': 2}),
 #     return_source_documents=True,
+<<<<<<< HEAD
 #     chain_type_kwargs={"prompt": PROMPT}
 # )
 
 # # Routes
+=======
+#     chain_type_kwargs=chain_type_kwargs
+# )
+
+
+
+
+
+
+>>>>>>> 41c3c380f9fbe7c2a97004fa79baf3eccb4afe49
 # @app.route("/")
 # def index():
 #     return render_template("chat.html")
@@ -82,9 +133,18 @@
 # def get_response():
 #     msg = request.form["msg"]
 #     input = msg
+<<<<<<< HEAD
 #     result = qa({"query": input})
 #     return str(result["result"])
 
+=======
+#     print("User input:", input)
+#     result = qa({"query": input})
+#     print("Response:", result["result"])
+#     return str(result["result"])
+
+
+>>>>>>> 41c3c380f9fbe7c2a97004fa79baf3eccb4afe49
 # if __name__ == '__main__':
 #     app.run(host="0.0.0.0", port=8080, debug=True)
 
@@ -98,11 +158,20 @@
 
 
 
+<<<<<<< HEAD
 
 
 from flask import Flask, render_template, jsonify, request
 from src.helper import download_hugging_face_embeddings
 from langchain_core.prompts import PromptTemplate
+=======
+from flask import Flask, render_template, jsonify, request
+from src.helper import download_hugging_face_embeddings
+from langchain_community.vectorstores import Pinecone as LangchainPinecone
+from pinecone import Pinecone
+from langchain.prompts import PromptTemplate
+from langchain_community.llms import CTransformers
+>>>>>>> 41c3c380f9fbe7c2a97004fa79baf3eccb4afe49
 from langchain.chains import RetrievalQA
 from dotenv import load_dotenv
 from src.prompt import prompt_template
@@ -157,8 +226,14 @@ except (ImportError, AttributeError) as e:
 # Download embeddings
 embeddings = download_hugging_face_embeddings()
 
+<<<<<<< HEAD
 # Initialize vectorstore with the updated PineconeVectorStore class
 from langchain_pinecone import PineconeVectorStore
+=======
+# Initialize Pinecone client
+pc = Pinecone(api_key=PINECONE_API_KEY)
+index_name = "chatbot"
+>>>>>>> 41c3c380f9fbe7c2a97004fa79baf3eccb4afe49
 
 docsearch = PineconeVectorStore(
     index=pinecone_index,
@@ -166,13 +241,19 @@ docsearch = PineconeVectorStore(
     text_key="text",
     namespace="default"
 )
+<<<<<<< HEAD
 
 # Setup prompt
+=======
+ 
+# Prompt setup
+>>>>>>> 41c3c380f9fbe7c2a97004fa79baf3eccb4afe49
 PROMPT = PromptTemplate(
     template=prompt_template,
     input_variables=["context", "question"]
 )
 
+<<<<<<< HEAD
 # LLM config using CTransformers (consider switching to an API-based model for deployment)
 llm = CTransformers(
     model="model/llama-2-7b-chat.ggmlv3.q4_0.bin",  # This will be challenging on Render
@@ -182,6 +263,34 @@ llm = CTransformers(
         'temperature': 0.8
     }
 )
+=======
+# LLM configuration
+try:
+    import os.path
+    model_path = "model/llama-2-7b-chat.ggmlv3.q4_0.bin"
+    
+    if os.path.isfile(model_path):
+        llm = CTransformers(
+            model=model_path,
+            model_type="llama",
+            config={
+                'max_new_tokens': 512,
+                'temperature': 0.8
+            }
+        )
+    else:
+        from langchain_community.llms import HuggingFaceHub
+        print(f"Warning: Model file {model_path} not found. Falling back to HuggingFaceHub.")
+        os.environ["HUGGINGFACEHUB_API_TOKEN"] = os.environ.get("HUGGINGFACE_API_KEY", "")
+        llm = HuggingFaceHub(
+            repo_id="meta-llama/Llama-2-7b-chat-hf",
+            model_kwargs={"temperature": 0.8, "max_new_tokens": 512}
+        )
+except Exception as e:
+    from langchain.llms import OpenAI
+    print(f"Warning: Failed to load LLM: {str(e)}. Falling back to OpenAI.")
+    llm = OpenAI(temperature=0.8)
+>>>>>>> 41c3c380f9fbe7c2a97004fa79baf3eccb4afe49
 
 # QA Chain
 qa = RetrievalQA.from_chain_type(
@@ -192,7 +301,10 @@ qa = RetrievalQA.from_chain_type(
     chain_type_kwargs={"prompt": PROMPT}
 )
 
+<<<<<<< HEAD
 # Routes
+=======
+>>>>>>> 41c3c380f9fbe7c2a97004fa79baf3eccb4afe49
 @app.route("/")
 def index():
     return render_template("chat.html")
