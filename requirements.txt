@@ -12,6 +12,8 @@ langchain-pinecone==0.2.6
 langchain-huggingface
 
 
+
+
 # Vector database (Pinecone)
 pinecone-client==2.2.4
 
