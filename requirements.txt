@@ -9,27 +9,27 @@ langchain==0.3.25
 langchain-core==0.3.60
 langchain-community==0.3.24
 langchain-pinecone==0.2.6
-langchain-huggingface
-
-
-
+langchain-huggingface==0.1.2
 
 # Vector database (Pinecone)
 pinecone-client==2.2.4
 
-# Embeddings & local models
+# Local model support
 ctransformers==0.2.27
+
+# Embeddings & transformers (lightweight versions)
 sentence-transformers==4.1.0
-torch==2.7.0
 huggingface-hub==0.31.2
 
-# Document handling (in case of PDF/document parsing)
+# Document handling
 pypdf==5.5.0
 
 # Deployment
 gunicorn==23.0.0
 
-# Scientific computing (if used in embeddings or pre-processing)
-scikit-learn==1.6.1
+# Scientific computing (essential only)
 numpy==2.2.5
-scipy==1.15.3
+scikit-learn==1.6.1
+
+# Torch CPU-only version (much smaller than full torch)
+torch==2.7.0+cpu --extra-index-url https://download.pytorch.org/whl/cpu
