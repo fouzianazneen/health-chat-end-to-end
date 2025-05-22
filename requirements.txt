@@ -1,35 +1,175 @@
-# Core web framework
-Flask==3.1.1
-Jinja2==3.1.6
-python-dotenv==1.1.0
-requests==2.32.3
+from flask import Flask, render_template, jsonify, request
+from dotenv import load_dotenv
+from langchain.chains import RetrievalQA
+from langchain_core.prompts import PromptTemplate
+from langchain_pinecone import PineconeVectorStore
+from pinecone import Pinecone
+from src.helper import download_hugging_face_embeddings
+from src.prompt import prompt_template
+import os
 
-# LLM & LangChain ecosystem
-langchain==0.3.25
-langchain-core==0.3.60
-langchain-community==0.3.24
-langchain-pinecone==0.2.6
-langchain-huggingface==0.1.2
+# Load environment variables
+load_dotenv()
 
-# Vector database (Pinecone)
-pinecone-client==2.2.4
+# Flask app
+app = Flask(__name__)
 
-# Local model support
-ctransformers==0.2.27
+# Pinecone setup
+PINECONE_API_KEY = os.environ.get('PINECONE_API_KEY')
+index_name = "medical-chatbot"
 
-# Embeddings & transformers (lightweight versions)
-sentence-transformers==4.1.0
-huggingface-hub==0.31.2
+# Global variables
+embeddings = None
+docsearch = None
+qa = None
 
-# Document handling
-pypdf==5.5.0
+def initialize_components():
+    """Initialize components with error handling"""
+    global embeddings, docsearch, qa
+    
+    try:
+        # Initialize Pinecone client
+        pc = Pinecone(api_key=PINECONE_API_KEY)
+        pinecone_index = pc.Index(index_name)
+        print("✓ Connected to Pinecone")
+        
+        # Download HuggingFace embeddings
+        embeddings = download_hugging_face_embeddings()
+        print("✓ Embeddings loaded")
+        
+        # Setup vector store
+        docsearch = PineconeVectorStore(
+            index=pinecone_index,
+            embedding=embeddings,
+            text_key="text",
+            namespace="default"
+        )
+        print("✓ Vector store connected")
+        
+        # For deployment, we'll use a simple text-based fallback instead of LLM
+        # This avoids the large model file issue
+        print("✓ Using retrieval-only mode (no LLM model needed)")
+        
+        return True
+        
+    except Exception as e:
+        print(f"✗ Initialization failed: {e}")
+        return False
 
-# Deployment
-gunicorn==23.0.0
+def get_context_response(user_input):
+    """Get response using only vector search (no LLM)"""
+    if not docsearch:
+        return "Sorry, the system is not properly initialized."
+    
+    try:
+        # Get relevant documents
+        docs = docsearch.similarity_search(user_input, k=3)
+        
+        if not docs:
+            return "I don't have information about that topic in my knowledge base."
+        
+        # Combine the most relevant context
+        context = "\n\n".join([doc.page_content for doc in docs])
+        
+        # Create a simple response based on retrieved context
+        response = f"Based on the medical information available:\n\n{context[:800]}...\n\nPlease consult with a healthcare professional for personalized medical advice."
+        
+        return response
+        
+    except Exception as e:
+        return f"Sorry, I encountered an error while searching: {str(e)}"
 
-# Scientific computing (essential only)
-numpy==2.2.5
-scikit-learn==1.6.1
+def get_llm_response(user_input):
+    """Try to use local LLM if available, fallback to context-only"""
+    model_path = "model/llama-2-7b-chat.ggmlv3.q4_0.bin"
+    
+    # Check if model exists locally (for development)
+    if os.path.exists(model_path):
+        try:
+            from langchain_community.llms import CTransformers
+            
+            # Setup prompt
+            PROMPT = PromptTemplate(
+                template=prompt_template,
+                input_variables=["context", "question"]
+            )
+            
+            llm = CTransformers(
+                model=model_path,
+                model_type="llama",
+                config={
+                    'max_new_tokens': 256,
+                    'temperature': 0.8,
+                    'context_length': 1024,
+                    'threads': 1,
+                }
+            )
+            
+            qa = RetrievalQA.from_chain_type(
+                llm=llm,
+                chain_type="stuff",
+                retriever=docsearch.as_retriever(search_kwargs={'k': 2}),
+                return_source_documents=True,
+                chain_type_kwargs={"prompt": PROMPT}
+            )
+            
+            result = qa.invoke({"query": user_input})
+            return result["result"]
+            
+        except Exception as e:
+            print(f"LLM failed, using context-only: {e}")
+            return get_context_response(user_input)
+    else:
+        # Model not available (deployment), use context-only
+        return get_context_response(user_input)
 
-# Torch CPU-only version (much smaller than full torch)
-torch==2.7.0+cpu --extra-index-url https://download.pytorch.org/whl/cpu
+# Initialize components on startup
+initialization_success = initialize_components()
+
+# Flask routes
+@app.route("/")
+def index():
+    return render_template("chat.html")
+
+@app.route("/chat", methods=["POST"])
+def chat():
+    if not initialization_success:
+        return jsonify({"error": "System not initialized properly"}), 500
+        
+    user_input = request.json.get("message")
+    if not user_input:
+        return jsonify({"error": "No message provided"}), 400
+
+    try:
+        response = get_llm_response(user_input)
+        return jsonify({"response": response})
+    except Exception as e:
+        return jsonify({"response": f"Sorry, I encountered an error: {str(e)}"})
+
+@app.route("/get", methods=["GET", "POST"])
+def get_response():
+    if not initialization_success:
+        return "System not initialized properly"
+        
+    msg = request.form["msg"]
+    
+    try:
+        response = get_llm_response(msg)
+        return str(response)
+    except Exception as e:
+        return f"Sorry, I encountered an error: {str(e)}"
+
+@app.route("/health")
+def health():
+    model_exists = os.path.exists("model/llama-2-7b-chat.ggmlv3.q4_0.bin")
+    return jsonify({
+        "status": "healthy" if initialization_success else "degraded",
+        "pinecone_connected": docsearch is not None,
+        "embeddings_loaded": embeddings is not None,
+        "local_model_available": model_exists,
+        "mode": "full_llm" if model_exists else "retrieval_only"
+    })
+
+# Run app
+if __name__ == '__main__':
+    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 8080)), debug=False)a
